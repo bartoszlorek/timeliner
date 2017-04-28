@@ -1,0 +1,18 @@
+{
+	"manifest_version": 2,
+	"name": "Timeliner",
+	"short_name": "Timeliner",
+    "version": "1.0",
+    "author": "Bartosz Lorek",
+	"description": "Timeline view for Microsoft Planner",
+	"homepage_url": "http://www.plankton.tv/",
+	"icons": {
+		"48": "assets/search48.png",
+		"128": "assets/search48.png"
+	},
+	"content_scripts": [{
+		"matches": ["https://tasks.office.com/Plankton.onmicrosoft.com/PL-PL/Home/PlanViews/*"],
+		"css": ["style.css"],
+		"js": ["script.js"]
+	}]
+}
