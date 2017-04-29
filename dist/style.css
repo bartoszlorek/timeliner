@@ -1,0 +1,47 @@
+.timeliner-wrap {
+    position: relative;
+    overflow-x: auto;
+    background: #efefef;
+    padding-top: 16px;
+    border-bottom: 10px solid #efefef;
+}
+
+.timeliner-board {
+    display: flex;
+    align-items: stretch;
+    min-height: 64px;
+}
+.timeliner-day {
+    flex: 1 1 0;
+    text-align: center;
+    border-left: 1px solid #efefef;
+    border-bottom: 1px solid #333;
+    background: #fff;
+    min-width: 2em;
+}
+.timeliner-day-head {
+    padding: 4px;
+    display: block;
+}
+.timeliner-weekend {
+    background: #e8e8e8;
+}
+.timeliner-first {
+    border-left: 4px solid #333;
+}
+.timeliner-today {
+    background: #e0244d;
+    font-weight: bold;
+    color: #fff;
+}
+
+
+.timeliner-months {
+    position: relative;
+    height: 4em;
+}
+.timeliner-month {
+    position: absolute;
+    top: 0;
+    left: 0;
+}

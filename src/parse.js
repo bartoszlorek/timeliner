@@ -38,8 +38,8 @@ function cardData(card) {
     todos = bucket && cardTodos(topBar.children[1]);
     if (todos !== false) {
         return {
-            bucket: bucket,
-            terms: todosTerms(todos)
+            terms: todosTerms(todos),
+            bucket
         }
     }
     return false;
@@ -90,23 +90,33 @@ function todosTerms(todos) {
 }
 
 // input [string]:
-// dd.mm
-// dd.mm-dd.mm
-// dd.mm.yyyy-dd.mm.yyyy
-
-// output [string]:
-// yyyy-mm-dd
+//    dd.mm
+//    dd.mm-dd.mm
+//    dd.mm.yyyy-dd.mm.yyyy
+// output [Date]
 function convertDate(date) {
+    let part,
+        right;
+
     if (date.indexOf('-') > -1) {
-        date = date.split('-');
-        return [convertDate(date[0]),
-                convertDate(date[1])];
+        part = date.split('-');
+        right = part[1].split('.');
+
+        if (right.length === 3 &&
+            part[0].split('.').length === 2) {
+            part[0] = part[0] +'.'+ right[2];
+        }
+        return [convertDate(part[0]),
+                convertDate(part[1])];
     }
-    date = date.split('.');
-    if (date.length === 2) {
-        date.push(YEAR);
+    part = date.split('.');
+    if (part.length === 2) {
+        part.push(YEAR);
     }
-    return date
-        .reverse()
-        .join('-');
+    return new Date(
+        parseInt(part[2], 10),
+        parseInt(part[1], 10) - 1,
+        parseInt(part[0], 10),
+        0, 0, 0, 0
+    );
 }
