@@ -59,9 +59,10 @@ function cardTodos(cardMiddle) {
         i = 0;
 
     while (i < length) {
-        result.push(items[i]
-            .children[1]
-            .textContent);
+        result.push({
+            text: items[i].children[1].textContent,
+            item: items[i]
+        });
         i += 1;
     }
     return result;
@@ -70,18 +71,17 @@ function cardTodos(cardMiddle) {
 function todosTerms(todos) {
     var length = todos.length,
         result = [],
+        sliceAt,
         todo,
-        index,
         i = 0;
 
     while (i < length) {
         todo = todos[i];
-        index = todo.indexOf(' ');
+        sliceAt = todo.text.indexOf(' ');
         result.push({
-            date: convertDate(todo
-                .slice(0, index)),
-            title: todo
-                .slice(index + 1)
+            item: todo.item,
+            date: convertDate(todo.text.slice(0, sliceAt)),
+            title: todo.text.slice(sliceAt + 1)
                 .replace(/^[\s-]+/gm,'')
         });
         i += 1;
