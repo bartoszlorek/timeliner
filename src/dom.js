@@ -40,10 +40,9 @@ function create(tagName, attributes, children) {
 }
 
 function empty(element) {
-    if (!( element && element.nodeType)) {
-        return false;
-    }
-    while (element.firstChild) {
-        element.removeChild(element.firstChild);
-    }
+    if (element && element.nodeType) {
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
+    } return element;
 }
