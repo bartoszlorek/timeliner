@@ -4,7 +4,7 @@
 	"short_name": "Timeliner",
     "version": "1.0",
     "author": "Bartosz Lorek",
-	"description": "Timeline view for Microsoft Planner",
+	"description": "Timeline view for Microsoft Office Planner",
 	"homepage_url": "http://www.plankton.tv/",
 	"icons": {
 		"48": "assets/search48.png",

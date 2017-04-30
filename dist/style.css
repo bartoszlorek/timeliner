@@ -1,21 +1,70 @@
+/* layout */
 .timeliner-wrap {
     position: relative;
     overflow-x: auto;
+    flex-shrink: 0;
+}
+.timeliner-track {
+    display: inline-block;
+    min-width: 100%;
+}
+.timeliner-body {
+    position: relative;
+    overflow: hidden;
+}
+.timeliner-month {
+    box-sizing: border-box;
+    overflow: hidden;
+}
+.timeliner-head,
+.timeliner-days {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    flex-direction: row;
+}
+.timeliner-days {
+    height: 100%;
+}
+.timeliner-day {
+    box-sizing: border-box;
+    flex: 1 1 0;
+}
+.timeliner-tasks {
+    position: absolute;
+    left: 0; top: 32px; right: 0;
+}
+.timeliner-task {
+    position: absolute;
+}
+
+
+/* presentation */
+.timeliner-track {
+    border-bottom: 1px solid #333;
+}
+.timeliner-body {
+    padding-top: 32px;
+}
+.timeliner-month {
+    font-weight: bold;
+    padding: 0 16px 16px;
+    font-size: 15px;
+}
+.timeliner-days {
+    margin-top: -32px;
+    min-height: 64px;
+    height: 150%;
+    height: calc(100% + 48px);
+}
+.timeliner-wrap {
     background: #efefef;
     padding-top: 16px;
     border-bottom: 10px solid #efefef;
 }
-
-.timeliner-board {
-    display: flex;
-    align-items: stretch;
-    min-height: 64px;
-}
 .timeliner-day {
-    flex: 1 1 0;
     text-align: center;
-    border-left: 1px solid #efefef;
-    border-bottom: 1px solid #333;
+    box-shadow: inset 1px 0px 0px #efefef;
     background: #fff;
     min-width: 2em;
 }
@@ -26,22 +75,22 @@
 .timeliner-weekend {
     background: #e8e8e8;
 }
-.timeliner-first {
-    border-left: 4px solid #333;
+.timeliner-first,
+.timeliner-month:not(:first-child) {
+    box-shadow: inset 2px 0px 0px #333;
 }
 .timeliner-today {
     background: #e0244d;
     font-weight: bold;
     color: #fff;
 }
-
-
-.timeliner-months {
-    position: relative;
-    height: 4em;
+.timeliner-task {
+    cursor: pointer;
 }
-.timeliner-month {
+.timeliner-task:after {
     position: absolute;
-    top: 0;
-    left: 0;
+    content: "";
+    left: 0; right: 0; top: 0; bottom: 0;
+    margin: 2px;
+    background: #0273eb;
 }
