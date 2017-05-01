@@ -1,5 +1,6 @@
 const isDate = isTypeofProto('Date');
 const isArray = isTypeofProto('Array');
+const isNodeList = isTypeofProto('NodeList');
 
 export {
     isDate,
@@ -15,12 +16,16 @@ function isObject(value) {
     return value !== null && isTypeofProto('Object')(value) && !isArray(value);
 }
 function forEach(list, callback) {
-    let indexed = isArray(list),
+    let indexed,
         length,
         props,
         prop,
         i = 0;
 
+    if (isNodeList(list)) {
+        list = Array.prototype.slice.call(list);
+    }
+    indexed = isArray(list);
     if (! (indexed || isObject(list))) {
         return list;
     }
@@ -28,7 +33,10 @@ function forEach(list, callback) {
     length = props.length;
     while (i < length) {
         prop = indexed ? i : props[i];
-        callback(prop, list[prop], list);
+        if (callback(prop, list[prop], list) === false) {
+            break;
+        }
         i += 1;
     }
+    return list;
 }
