@@ -1,5 +1,5 @@
 import { isArray, forEach } from './utils.js';
-import { create, empty } from './dom.js';
+import { create, appends, empty } from './dom.js';
 
 const PREFIX = 'timeliner-';
 const DAY_MS = 24*60*60*1000;
@@ -12,24 +12,27 @@ const TODAY = new Date();
 TODAY.setHours(0,0,0,0);
 
 export default function(container, data) {
+    console.log(data)
+
     if (! data.length) {
         return false;
     }
-    let range = getRange(data);
-    empty(container).appendChild(
-        create('div', { class: PREFIX + 'track' }, [
-            create('div', { class: PREFIX + 'head' }, monthsIn(range)),
-            create('div', {
-                class: PREFIX + 'body',
-                style: {
-                    height: data.length * TASK_HEIGHT + 16 + 'px'
-                }
-            }, [
-                create('div', { class: PREFIX + 'days' }, daysIn(range)),
-                create('div', { class: PREFIX + 'tasks' }, addTasks(range, data))
-            ])
+    let range = getRange(data),
+        tasks = getTasks(range, data);
+        
+    appends(empty(container), [
+        create('div', { class: PREFIX + 'head' }, monthsIn(range)),
+        create('div', {
+            class: PREFIX + 'body',
+            style: {
+                height: tasks.height * TASK_HEIGHT + 16 + 'px'
+            }
+        }, [
+            create('div', { class: PREFIX + 'days' }, daysIn(range)),
+            create('div', { class: PREFIX + 'tasks' }, tasks.frag)
         ])
-    );
+    ]);
+    return true;
 }
 
 const daysIn = inRange((day, frag) => {
@@ -44,6 +47,11 @@ const daysIn = inRange((day, frag) => {
 }, fragment());
 
 const monthsIn = inRange((day, frag, data) => {
+    if (typeof data.index === 'undefined') {
+        data.index =  0;
+        data.prev = -1;
+        data.left = 0;
+    }
     let last = data.index === data.range.count-1,
         current = day.getMonth();
 
@@ -71,81 +79,7 @@ const monthsIn = inRange((day, frag, data) => {
     }    
     data.prev = current;
     data.index += 1;
-
-},  fragment(), {
-    index: 0,
-    prev: -1,
-    left: 0
-});
-
-const tasksIn = inRange((day, frag, data) => {
-    let last = data.index === data.range.count-1,
-        current = day.getMonth();
-
-    if (current != data.prev && data.index > 0 || last) {
-        let width = data.index - data.left,
-            month = data.prev,
-            year = day.getFullYear();
-
-        if (last) {
-            width += 1;
-        }
-        if (!last && month === 11) {
-            year -= 1;
-        }
-        frag.appendChild(
-            create('div', {
-                class: PREFIX + 'month',
-                text: MONTHS[month] + ' ' + year,
-                style: {
-                    width: width / data.range.count * 100 + '%'
-                }
-            })
-        );
-        data.left = data.index;
-    }    
-    data.prev = current;
-    data.index += 1;
-
-},  fragment(), {
-    index: 0,
-    prev: -1,
-    left: 0
-});
-
-function addTasks(range, data) {
-    let count = range.count,
-        root = +range.min,
-        frag = fragment();
-
-    forEach(data, (i, bucket) => {
-        let tasks = [];
-
-        forEach(bucket.terms, (j, task) => {
-            let period = isArray(task.date),
-                start = period ? +task.date[0] : +task.date,
-                end = period ? +task.date[1] : start,
-                left = (start - root) / DAY_MS,
-                width = (end - start) / DAY_MS + 1;
-
-            let element = create('div', {
-                class: PREFIX + 'task',
-                style: {
-                    top: i * TASK_HEIGHT + 'px',
-                    left: left / count * 100 + '%',
-                    width: width / count * 100 + '%',
-                    height: TASK_HEIGHT + 'px'
-                }
-            });
-            element.addEventListener('mouseover', () => highlight(task.item, true));
-            element.addEventListener('mouseout', () => highlight(task.item, false));
-            frag.appendChild(element);
-        });
-
-        //console.log( tasks )
-    });
-    return frag;
-}
+},  fragment());
 
 /* ---------------------------------------- */
 
@@ -193,8 +127,8 @@ function getRange(data) {
     }
 }
 
-function inRange(callback, store, data) {
-    return (range) => {
+function inRange(callback, store) {
+    return (range, data) => {
         let day = new Date(range.min.getTime()),
             max = new Date(range.max.getTime());
         if (day > max) {
@@ -208,6 +142,93 @@ function inRange(callback, store, data) {
         }
         return store;
     }
+}
+
+function getTasks(range, data) {
+    let count = range.count,
+        root = +range.min,
+        frag = fragment(),
+        tasks = [],
+        maxTop = 0;
+
+    forEach(data, (i, bucket) => {
+        forEach(bucket.terms, (j, task) => {
+            let period = isArray(task.date),
+                start = period ? +task.date[0] : +task.date,
+                end = period ? +task.date[1] : start,
+                left = (start - root) / DAY_MS,
+                width = (end - start) / DAY_MS + 1,
+                top = nonOverlappingTop(tasks, left, width);
+
+            if (top > maxTop) {
+                maxTop = top;
+            }
+            frag.appendChild(
+                create('div', {
+                    class: PREFIX + 'task',
+                    style: {
+                        top: top * TASK_HEIGHT + 'px',
+                        left: left / count * 100 + '%',
+                        width: width / count * 100 + '%',
+                        height: TASK_HEIGHT + 'px'
+                    },
+                    event: {
+                        mouseover: () => highlight(task.item, true),
+                        mouseout: () => highlight(task.item, false)
+                    }
+                })
+            );
+        });
+    });
+    return {
+        height: maxTop + 1,
+        frag
+    }
+}
+
+function segmentsOverlap(a, b) {
+    if (a[2] !== b[2]) {
+        return false;
+    }
+    let min = Math.min(a[0] + a[1], b[0] + b[1]),
+        max = Math.max(a[0], b[0]);
+    return Math.max(0, min - max) > 0;
+}
+
+function nonOverlappingTop(tasks, left, width) {
+    let task = [left, width, 0],
+        length = tasks.length;
+
+    if (length) {
+        let overlap,
+            i;
+        while (true) {
+            overlap = false;
+            i = 0;
+            while (i < length) {
+                if (segmentsOverlap(tasks[i], task)) {
+                    overlap = true;
+                    break;
+                }
+                i += 1;
+            }
+            if (overlap) {
+                task[2] += 1;
+            } else {
+                break;
+            }
+        }
+    }
+    tasks.push(task);
+    return task[2];
+}
+
+function fragment() {
+    return document.createDocumentFragment();
+}
+
+function highlight(element, state) {
+    element.style.backgroundColor = state ? '#c7e0f4' : '';  
 }
 
 function dayClass(day) {
@@ -225,13 +246,4 @@ function dayClass(day) {
         name += ' ' + PREFIX + 'today';
     }
     return name;
-}
-
-function fragment() {
-    return document.createDocumentFragment();
-}
-
-function highlight(element, state) {
-    element.style.boxShadow = state ? 'inset 0px 0px 0px 2px #0273eb' : '';
-    element.style.backgroundColor = state ? '#d7eaff' : '';  
 }

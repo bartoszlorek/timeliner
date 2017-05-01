@@ -1,8 +1,12 @@
 /* layout */
 .timeliner-wrap {
     position: relative;
-    overflow-x: auto;
     flex-shrink: 0;
+}
+.timeliner-board {
+    width: 100%;
+    position: relative;
+    overflow: auto;
 }
 .timeliner-track {
     display: inline-block;
@@ -93,4 +97,19 @@
     left: 0; right: 0; top: 0; bottom: 0;
     margin: 2px;
     background: #0273eb;
+}
+
+.timeliner-refresh {
+    position: absolute;
+    top: 0; right: 0;
+    cursor: pointer;
+    font-weight: bold;
+    padding: 16px;
+    padding-right: 20px;
+    z-index: 999;
+    line-height: 1.75em;
+    user-select: none;
+}
+.timeliner-refresh:active + .timeliner-board {
+    opacity: 0;
 }
