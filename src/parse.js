@@ -1,122 +1,113 @@
+import { forEach } from './utils.js';
+
 const CARD_SELECTOR = '.todo-taskboard-card:not(.todo-taskboard-card-completed)';
 const TODO_SELECTOR = '.todo-checklist-item:not(.todo-hidden)';
+const BUCKET_SELECTOR = '.todo-taskboard-card-bucketName';
+const TOPBAR_SELECTOR = '.todo-taskboard-card-topBar';
+
+// dd.mm
+// dd.mm.yyyy
+// dd.mm-dd.mm
+// dd.mm-dd.mm.yyyy
+// dd.mm.yyyy-dd.mm.yyyy
+const DATE_REGEX = /^(\d{1,2})\.?(\d{2})?\.?(\d{4})?\s*\-?\s*(\d{1,2})?\.?(\d{2})?\.?(\d{4})?/;
 const YEAR = new Date().getFullYear();
 
-let matchingTitle;
-
-export default function(content, title) {
-    if (typeof title !== 'string') {
-        throw 'second parameter must be a string';
-    }
+export default function(content) {
     let cards = content.querySelectorAll(CARD_SELECTOR),
-        length = cards.length,
         result = [],
-        data,
-        i = 0;
-
-    matchingTitle = title;
-    while (i < length) {
-        data = cardData(cards[i]);
+        data;
+    forEach(cards, (i, card) => {
+        data = cardData(card);
         if (data !== false) {
             result.push(data);
         }
-        i += 1;
-    }
+    });
     return result;
 }
 
 function cardData(card) {
-    let topBar = card.querySelector(
-            '.todo-taskboard-card-topBar'),
-        bucket,
-        todos;
-        
-    if (topBar === null) {
+    let topBar = card.querySelector(TOPBAR_SELECTOR);
+    if (topBar !== null) {
+        let todos = todosTerms(cardTodos(topBar));
+        if (todos.length) {
+            return {
+                bucket: topBar
+                    .querySelector(BUCKET_SELECTOR)
+                    .textContent,
+                terms: todos
+            }
+        } 
+    }
+    return false;
+}
+
+function cardTodos(card) {
+    let items = card.querySelectorAll(TODO_SELECTOR),
+        result = [];
+    forEach(items, (i, item) => {
+        result.push({
+            text: item
+                .children[1]
+                .textContent,
+            item
+        });
+    });
+    return result;
+}
+
+function todosTerms(todos) {
+    let result = [],    
+        date;
+    forEach(todos, (i, todo) => {
+        if (date = parseDate(todo.text)) {
+            result.push({
+                item: todo.item,
+                date 
+            });
+        }
+    });
+    return result;
+}
+
+function parseDate(string) {
+    // [full, dd, mm, yyyy, ddd, mm, yyyy]
+    let match = DATE_REGEX.exec(string);
+    if (match === null) {
         return false;
     }
-    bucket = cardBucket(topBar.children[0]);
-    todos = bucket && cardTodos(topBar.children[1]);
-    if (todos !== false) {
-        return {
-            terms: todosTerms(todos),
-            bucket
+    if (!match[4]) {
+        match[3] = match[3] || YEAR;
+        return newDate([match[1], match[2], match[3]]);
+
+    } else {
+        match[2] = match[2] || match[5];
+        match[3] = match[3] || match[6] || YEAR;
+        match[6] = match[6] || YEAR;
+        let start = newDate([match[1], match[2], match[3]]),
+            end = newDate([match[4], match[5], match[6]]);
+        if (start && end) {
+            return [start, end];
         }
     }
     return false;
 }
 
-function cardBucket(cardTitle) {
-    let title = cardTitle.children[0].textContent;
-    if (title.toLowerCase() === matchingTitle) {
-        return cardTitle.children[1].textContent;
-    } return false;
-}
-
-function cardTodos(cardMiddle) {
-    let items = cardMiddle.querySelectorAll(TODO_SELECTOR),
-        length = items.length,
-        result = [],
-        i = 0;
-
-    while (i < length) {
-        result.push({
-            text: items[i].children[1].textContent,
-            item: items[i]
-        });
-        i += 1;
+function newDate(array) {
+    let day,
+        month;
+    if (array.indexOf(undefined) > -1) {
+        return false;
     }
-    return result;
-}
-
-function todosTerms(todos) {
-    var length = todos.length,
-        result = [],
-        sliceAt,
-        todo,
-        i = 0;
-
-    while (i < length) {
-        todo = todos[i];
-        sliceAt = todo.text.indexOf(' ');
-        result.push({
-            item: todo.item,
-            date: convertDate(todo.text.slice(0, sliceAt)),
-            title: todo.text.slice(sliceAt + 1)
-                .replace(/^[\s-]+/gm,'')
-        });
-        i += 1;
-    }
-    return result;
-}
-
-// input [string]:
-//    dd.mm
-//    dd.mm-dd.mm
-//    dd.mm.yyyy-dd.mm.yyyy
-// output [Date]
-function convertDate(date) {
-    let part,
-        right;
-
-    if (date.indexOf('-') > -1) {
-        part = date.split('-');
-        right = part[1].split('.');
-
-        if (right.length === 3 &&
-            part[0].split('.').length === 2) {
-            part[0] = part[0] +'.'+ right[2];
-        }
-        return [convertDate(part[0]),
-                convertDate(part[1])];
-    }
-    part = date.split('.');
-    if (part.length === 2) {
-        part.push(YEAR);
+    day = parseInt(array[0], 10);
+    month = parseInt(array[1], 10);
+    if (day > 31 || month > 12) {
+        return false;
     }
     return new Date(
-        parseInt(part[2], 10),
-        parseInt(part[1], 10) - 1,
-        parseInt(part[0], 10),
+        parseInt(array[2], 10),
+        month - 1,
+        day,
         0, 0, 0, 0
     );
 }
