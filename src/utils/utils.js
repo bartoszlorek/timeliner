@@ -1,3 +1,6 @@
+const objectString = Object.prototype.toString;
+const arraySlice = Array.prototype.slice;
+
 const isDate = isTypeofProto('Date');
 const isArray = isTypeofProto('Array');
 const isNodeList = isTypeofProto('NodeList');
@@ -6,11 +9,12 @@ export {
     isDate,
     isArray,
     isObject,
-    forEach
+    forEach,
+    indexOf
 }
 
 function isTypeofProto(name) {
-    return value => Object.prototype.toString.call(value) === '[object '+ name +']';
+    return value => objectString.call(value) === '[object '+ name +']';
 }
 function isObject(value) {
     return value !== null && isTypeofProto('Object')(value) && !isArray(value);
@@ -23,7 +27,7 @@ function forEach(list, callback) {
         i = 0;
 
     if (isNodeList(list)) {
-        list = Array.prototype.slice.call(list);
+        list = arraySlice.call(list);
     }
     indexed = isArray(list);
     if (! (indexed || isObject(list))) {
@@ -39,4 +43,24 @@ function forEach(list, callback) {
         i += 1;
     }
     return list;
+}
+
+function indexOf(data, match) {
+    if (! (isArray(data) || typeof data === 'string')) {
+        return -1;
+    }
+    if (typeof match !== 'function') {
+        return data.indexOf(match); 
+    }
+    else {
+        let length = data.length,
+            i = 0;
+        while (i < length) {
+            if (match(data[i]) === true) {
+                return i;
+            }
+            i += 1;
+        }
+        return -1;
+    }
 }

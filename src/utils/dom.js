@@ -1,10 +1,31 @@
 import { forEach, isArray } from './utils.js';
 
 export {
+    query,
     create,
     appends,
     empty,
-    hasClass
+    hasClass,
+    addClass,
+    removeClass
+}
+
+const arraySlice = Array.prototype.slice;
+
+function query(selector, container) {
+    if (typeof selector === 'string') {
+        container = container || document;
+        if (selector[0] === '#') {
+            let element = container.querySelector(selector);
+            if (element !== null) {
+                return [element];
+            }
+        } else {
+            return arraySlice.call(container
+                 .querySelectorAll(selector));
+        }
+    }
+    return [];
 }
 
 function create(tagName, attributes, children) {
@@ -21,7 +42,8 @@ function create(tagName, attributes, children) {
         }
         else if (prop === 'event') {
             forEach(value, (propEvent, valueEvent) => {
-                element.addEventListener(propEvent, valueEvent);
+                element.addEventListener(propEvent,
+                    valueEvent.bind(element));
             });
         }
         else {
@@ -57,5 +79,25 @@ function appends(element, children) {
 }
 
 function hasClass(element, value) {
-    return element.className.indexOf(value) > -1;
+    return element.className
+        .split(' ')
+        .indexOf(value) > -1;
+}
+
+function addClass(element, className) {
+    if (!hasClass(element, className)) {
+        element.className += ' ' + className;
+    } return element;
+}
+
+function removeClass(element, className) {
+    if (hasClass(element, className)) {
+        let classes = element.className,
+            regex = new RegExp(className +'\\s?');  
+        classes = classes.replace(regex, '');
+        if (classes[classes.length - 1] === ' ') {
+            classes = classes.slice(0, -1);
+        }
+        element.className = classes;
+   } return element;
 }

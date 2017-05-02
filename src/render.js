@@ -1,41 +1,52 @@
-import { isArray, forEach } from './utils.js';
-import { create, appends, empty } from './dom.js';
+import { isArray, forEach } from './utils/utils.js';
+import { create, appends, empty } from './utils/dom.js';
+import { uniqueColor } from './utils/color.js';
+import { getRange, loopRange } from './range.js';
+import { hover, select } from './selection.js';
 
+const TODAY = new Date();
+      TODAY.setHours(0,0,0,0);
+const DAY_MS = 24 * 60 * 60 * 1000;
+const TASK_HEIGHT = 12;
 const PREFIX = 'timeliner-';
-const DAY_MS = 24*60*60*1000;
-const TASK_HEIGHT = 10;
 const MONTHS = [ 'styczeń', 'luty', 'marzec', 'kwiecień',
      'maj', 'czerwiec', 'lipiec', 'sierpień', 'wrzesień',
      'październik', 'listopad', 'grudzień' ];
 
-const TODAY = new Date();
-TODAY.setHours(0,0,0,0);
-
 export default function(container, data) {
-    console.log(data)
-
-    if (! data.length) {
+    if (!data.length) {
         return false;
     }
     let range = getRange(data),
         tasks = getTasks(range, data);
-        
+       
     appends(empty(container), [
-        create('div', { class: PREFIX + 'head' }, monthsIn(range)),
+        create('div', { class: PREFIX + 'head' }, addMonths(range)),
         create('div', {
             class: PREFIX + 'body',
             style: {
                 height: tasks.height * TASK_HEIGHT + 16 + 'px'
+            },
+            event: {
+                click: (e) => {
+                    e.stopPropagation();
+                    select(false);
+                }
             }
         }, [
-            create('div', { class: PREFIX + 'days' }, daysIn(range)),
+            create('div', { class: PREFIX + 'days' }, addDays(range)),
             create('div', { class: PREFIX + 'tasks' }, tasks.frag)
         ])
     ]);
+
+    select(false);
     return true;
 }
 
-const daysIn = inRange((day, frag) => {
+const getTaskColor = uniqueColor(75, 50);
+const getTodoColor = uniqueColor(75, 75);
+
+const addDays = loopRange((day, frag) => {
     frag.appendChild(
         create('div', { class: dayClass(day) },
             create('span', {
@@ -46,13 +57,13 @@ const daysIn = inRange((day, frag) => {
     );
 }, fragment());
 
-const monthsIn = inRange((day, frag, data) => {
+const addMonths = loopRange((day, frag, data) => {
     if (typeof data.index === 'undefined') {
         data.index =  0;
         data.prev = -1;
         data.left = 0;
     }
-    let last = data.index === data.range.count-1,
+    let last = data.index === data.range.total-1,
         current = day.getMonth();
 
     if (current != data.prev && data.index > 0 || last) {
@@ -71,7 +82,7 @@ const monthsIn = inRange((day, frag, data) => {
                 class: PREFIX + 'month',
                 text: MONTHS[month] + ' ' + year,
                 style: {
-                    width: width / data.range.count * 100 + '%'
+                    width: width / data.range.total * 100 + '%'
                 }
             })
         );
@@ -83,80 +94,23 @@ const monthsIn = inRange((day, frag, data) => {
 
 /* ---------------------------------------- */
 
-function getRange(data) {
-    let length = data.length,
-        minDate,
-        maxDate,
-        current,
-        minCurr,
-        maxCurr,
-        i = 0;
-
-    while (i < length) {
-        current = data[i];
-
-        if (current.hasOwnProperty('terms')) {
-            let term = getRange(current.terms);
-            minCurr = term.min;
-            maxCurr = term.max;
-        }
-        else if (current.hasOwnProperty('date')) {
-            let date = current.date;
-            if (isArray(date)) {
-                minCurr = date[0];
-                maxCurr = date[1];
-            } else {
-                minCurr = date;
-                maxCurr = date;
-            }
-        }
-        if (minDate === undefined
-        || +minCurr < +minDate) {
-            minDate = minCurr;
-        }
-        if (maxDate === undefined
-        || +maxCurr > +maxDate) {
-            maxDate = maxCurr;
-        }
-        i += 1;
-    }
-    return {
-        count: ((+maxDate - +minDate) / DAY_MS) + 1,
-        min: minDate,
-        max: maxDate
-    }
-}
-
-function inRange(callback, store) {
-    return (range, data) => {
-        let day = new Date(range.min.getTime()),
-            max = new Date(range.max.getTime());
-        if (day > max) {
-            return store;
-        }
-        data = data || {};
-        data.range = range;
-        while (day <= max) {
-            callback(day, store, data);
-            day.setDate(day.getDate()+1);
-        }
-        return store;
-    }
-}
-
 function getTasks(range, data) {
-    let count = range.count,
-        root = +range.min,
+    let dataLength = data.length,
+        rangeTotal = range.total,
+        rangeRoot = +range.min,
         frag = fragment(),
         tasks = [],
         maxTop = 0;
 
-    forEach(data, (i, bucket) => {
-        forEach(bucket.terms, (j, task) => {
-            let period = isArray(task.date),
-                start = period ? +task.date[0] : +task.date,
-                end = period ? +task.date[1] : start,
-                left = (start - root) / DAY_MS,
+    forEach(data, (i, group) => {
+        let taskColor = getTaskColor(i, dataLength),
+            todoColor = getTodoColor(i, dataLength);
+
+        forEach(group.terms, (j, task) => {
+            let isOneDay = !isArray(task.date),
+                start = isOneDay ? +task.date : +task.date[0],
+                end = isOneDay ? start : +task.date[1],
+                left = (start - rangeRoot) / DAY_MS,
                 width = (end - start) / DAY_MS + 1,
                 top = nonOverlappingTop(tasks, left, width);
 
@@ -168,15 +122,30 @@ function getTasks(range, data) {
                     class: PREFIX + 'task',
                     style: {
                         top: top * TASK_HEIGHT + 'px',
-                        left: left / count * 100 + '%',
-                        width: width / count * 100 + '%',
+                        left: left / rangeTotal * 100 + '%',
+                        width: width / rangeTotal * 100 + '%',
                         height: TASK_HEIGHT + 'px'
                     },
                     event: {
-                        mouseover: () => highlight(task.item, true),
-                        mouseout: () => highlight(task.item, false)
+                        mouseenter: () => hover(task.todo, todoColor),
+                        mouseleave: () => hover(false),
+                        click: function(e) {
+                            e.stopPropagation();
+                            select({
+                                task: this,
+                                todo: task.todo,
+                                color: todoColor
+                            });
+                        }
                     }
-                })
+                }, 
+                    create('div', {
+                        class: PREFIX + 'task-bar',
+                        style: {
+                            backgroundColor: taskColor
+                        }
+                    })
+                )
             );
         });
     });
@@ -225,10 +194,6 @@ function nonOverlappingTop(tasks, left, width) {
 
 function fragment() {
     return document.createDocumentFragment();
-}
-
-function highlight(element, state) {
-    element.style.backgroundColor = state ? '#c7e0f4' : '';  
 }
 
 function dayClass(day) {

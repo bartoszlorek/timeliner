@@ -1,14 +1,11 @@
-import { create } from './dom.js';
+import { query, create } from './utils/dom.js';
 import render from './render.js';
 import parse from './parse.js';
 
 const PREFIX = 'timeliner-';
-const content = document.querySelector(
-    '#tasks-content-pane');
-
+const content = query('#tasks-content-pane')[0];
 const track = create('div', {
-    class: PREFIX + 'track',
-    text: 'ładowanie...'
+    class: PREFIX + 'track'
 });
 
 content.parentElement.insertBefore(

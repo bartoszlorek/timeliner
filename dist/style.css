@@ -44,11 +44,9 @@
 
 
 /* presentation */
-.timeliner-track {
-    border-bottom: 1px solid #333;
-}
 .timeliner-body {
     padding-top: 32px;
+    border-bottom: 1px solid #333;
 }
 .timeliner-month {
     font-weight: bold;
@@ -79,26 +77,25 @@
 .timeliner-weekend {
     background: #e8e8e8;
 }
-.timeliner-first,
+.timeliner-first:not(:first-child),
 .timeliner-month:not(:first-child) {
     box-shadow: inset 2px 0px 0px #333;
 }
 .timeliner-today {
-    background: #e0244d;
+    background: #333;
     font-weight: bold;
     color: #fff;
 }
 .timeliner-task {
     cursor: pointer;
 }
-.timeliner-task:after {
+.timeliner-task-bar {
     position: absolute;
-    content: "";
     left: 0; right: 0; top: 0; bottom: 0;
     margin: 2px;
     background: #0273eb;
+    overflow: hidden;
 }
-
 .timeliner-refresh {
     position: absolute;
     top: 0; right: 0;
@@ -113,3 +110,21 @@
 .timeliner-refresh:active + .timeliner-board {
     opacity: 0;
 }
+.timeliner-task-select .timeliner-task-bar:after {
+    position: absolute;
+    content: "";
+    z-index: 1;
+    left: -40px; right: 0; top: 0; bottom: 0;
+    animation: .8s infinite linear stripes;
+    background: repeating-linear-gradient(45deg,
+        transparent,
+        transparent 5px,
+        rgba(255,255,255,.5) 5px,
+        rgba(255,255,255,.5) 10px
+    );
+}
+
+@keyframes stripes {
+	from { transform: translateX(0); }
+	to { transform: translateX(43px); }
+} 
