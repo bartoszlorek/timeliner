@@ -1,17 +1,18 @@
 import { isArray, forEach } from './utils/utils.js';
 import { create, appends, empty } from './utils/dom.js';
-import { uniqueColor } from './utils/color.js';
 import { getRange, loopRange } from './range.js';
-import { hover, select } from './selection.js';
+import { select, hover } from './select.js';
+import { getColor } from './colors.js';
 
-const TODAY = new Date();
-      TODAY.setHours(0,0,0,0);
-const DAY_MS = 24 * 60 * 60 * 1000;
-const TASK_HEIGHT = 12;
+const MONTHS = [ 'styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec',
+     'lipiec', 'sierpień', 'wrzesień', 'październik', 'listopad', 'grudzień' ];
+const WEEKDAYS = [ 'niedz', 'pon', 'wt', 'śr', 'czw', 'pt', 'sob' ];
 const PREFIX = 'timeliner-';
-const MONTHS = [ 'styczeń', 'luty', 'marzec', 'kwiecień',
-     'maj', 'czerwiec', 'lipiec', 'sierpień', 'wrzesień',
-     'październik', 'listopad', 'grudzień' ];
+
+const TASK_HEIGHT = 12;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const TODAY = new Date();
+TODAY.setHours(0,0,0,0);
 
 export default function(container, data) {
     if (!data.length) {
@@ -25,7 +26,7 @@ export default function(container, data) {
         create('div', {
             class: PREFIX + 'body',
             style: {
-                height: tasks.height * TASK_HEIGHT + 16 + 'px'
+                height: tasks.height * TASK_HEIGHT + 'px'
             },
             event: {
                 click: (e) => {
@@ -43,15 +44,16 @@ export default function(container, data) {
     return true;
 }
 
-const getTaskColor = uniqueColor(75, 50);
-const getTodoColor = uniqueColor(75, 75);
-
-const addDays = loopRange((day, frag) => {
+const addDays = loopRange((day, frag, data) => {
+    let text = day.getDate();
+    if (data.range.total < 14) {
+        text += ' (' + WEEKDAYS[day.getDay()] + ')';
+    }
     frag.appendChild(
         create('div', { class: dayClass(day) },
             create('span', {
                 class: PREFIX + 'day-head',
-                text: day.getDate()
+                text
             })
         )
     );
@@ -71,6 +73,9 @@ const addMonths = loopRange((day, frag, data) => {
             month = data.prev,
             year = day.getFullYear();
 
+        if (month === -1) {
+            month = current;
+        }
         if (last) {
             width += 1;
         }
@@ -103,8 +108,8 @@ function getTasks(range, data) {
         maxTop = 0;
 
     forEach(data, (i, group) => {
-        let taskColor = getTaskColor(i, dataLength),
-            todoColor = getTodoColor(i, dataLength);
+        let taskColor = getColor(i),
+            entryColor = getColor(i, .5);
 
         forEach(group.terms, (j, task) => {
             let isOneDay = !isArray(task.date),
@@ -127,14 +132,14 @@ function getTasks(range, data) {
                         height: TASK_HEIGHT + 'px'
                     },
                     event: {
-                        mouseenter: () => hover(task.todo, todoColor),
+                        mouseenter: () => hover(task.entry, entryColor),
                         mouseleave: () => hover(false),
                         click: function(e) {
                             e.stopPropagation();
                             select({
                                 task: this,
-                                todo: task.todo,
-                                color: todoColor
+                                entry: task.entry,
+                                color: entryColor
                             });
                         }
                     }

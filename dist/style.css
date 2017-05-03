@@ -45,7 +45,7 @@
 
 /* presentation */
 .timeliner-body {
-    padding-top: 32px;
+    padding: 32px 0 16px;
     border-bottom: 1px solid #333;
 }
 .timeliner-month {
@@ -68,7 +68,7 @@
     text-align: center;
     box-shadow: inset 1px 0px 0px #efefef;
     background: #fff;
-    min-width: 2em;
+    min-width: 2.25em;
 }
 .timeliner-day-head {
     padding: 4px;
