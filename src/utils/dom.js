@@ -1,16 +1,16 @@
-import { forEach, isArray } from './utils.js';
+import { u } from 'umbrellajs';
+import { forEach, isArray, isElement } from './utils.js';
 
 export {
     query,
     create,
     appends,
     empty,
-    hasClass,
-    addClass,
-    removeClass
+    scrollTo
 }
 
 const arraySlice = Array.prototype.slice;
+const SCROLLTO_MARGIN = 32;
 
 function query(selector, container) {
     if (typeof selector === 'string') {
@@ -58,16 +58,19 @@ function create(tagName, attributes, children) {
 }
 
 function empty(element) {
-    if (element && element.nodeType) {
+    if (isElement(element)) {
         while (element.firstChild) {
             element.removeChild(element.firstChild);
         }
-    } return element;
+    }
+    return element;
 }
 
 function appends(element, children) {
     let frag;
-    
+    if (!isElement(element)) {
+        return element;
+    }
     if (isArray(children)) {
         frag = document.createDocumentFragment();
         forEach(children, (i, value) => {
@@ -78,26 +81,24 @@ function appends(element, children) {
     return element;
 }
 
-function hasClass(element, value) {
-    return element.className
-        .split(' ')
-        .indexOf(value) > -1;
-}
+function scrollTo(parent, element) {
+    if (!parent) {
+        return;
+    }
+    let parentSize = u(parent).size(),
+        elementSize = u(element).size(),
+        left = elementSize.left - parentSize.left,
+        right = elementSize.right - parentSize.right,
+        top = elementSize.top - parentSize.top,
+        bottom = elementSize.bottom - parentSize.bottom;
 
-function addClass(element, className) {
-    if (!hasClass(element, className)) {
-        element.className += ' ' + className;
-    } return element;
-}
-
-function removeClass(element, className) {
-    if (hasClass(element, className)) {
-        let classes = element.className,
-            regex = new RegExp(className +'\\s?');  
-        classes = classes.replace(regex, '');
-        if (classes[classes.length - 1] === ' ') {
-            classes = classes.slice(0, -1);
-        }
-        element.className = classes;
-   } return element;
+    if (left < 0) {
+        parent.scrollLeft += left - SCROLLTO_MARGIN;
+    }
+    else if (right > 0) {
+        parent.scrollLeft += right + SCROLLTO_MARGIN;
+    }
+    if (top < 0 || bottom > 0) {
+        parent.scrollTop += top - parentSize.height/2 + elementSize.height/2;
+    }
 }

@@ -9,6 +9,7 @@ export {
     isDate,
     isArray,
     isObject,
+    isElement,
     forEach,
     indexOf
 }
@@ -19,6 +20,10 @@ function isTypeofProto(name) {
 function isObject(value) {
     return value !== null && isTypeofProto('Object')(value) && !isArray(value);
 }
+function isElement(value) {
+    return value && value.nodeType === 1;
+}
+
 function forEach(list, callback) {
     let indexed,
         length,
