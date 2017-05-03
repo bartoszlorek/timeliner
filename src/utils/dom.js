@@ -11,6 +11,7 @@ export {
 
 const arraySlice = Array.prototype.slice;
 const SCROLLTO_MARGIN = 32;
+const CARD_SELECTOR = '.todo-taskboard-card';
 
 function query(selector, container) {
     if (typeof selector === 'string') {
@@ -99,6 +100,9 @@ function scrollTo(parent, element) {
         parent.scrollLeft += right + SCROLLTO_MARGIN;
     }
     if (top < 0 || bottom > 0) {
-        parent.scrollTop += top - parentSize.height/2 + elementSize.height/2;
+        top = u(element)
+            .closest(CARD_SELECTOR)
+            .size().top - parentSize.top;
+        parent.scrollTop += top;
     }
 }
