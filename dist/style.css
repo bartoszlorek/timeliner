@@ -85,6 +85,7 @@
     background: #333;
     font-weight: bold;
     color: #fff;
+    box-shadow: #333 1px 0px 0px inset;
 }
 .timeliner-task {
     cursor: pointer;

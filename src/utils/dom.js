@@ -2,32 +2,12 @@ import { u } from 'umbrellajs';
 import { forEach, isArray, isElement } from './utils.js';
 
 export {
-    query,
     create,
-    appends,
-    empty,
     scrollTo
 }
 
 const arraySlice = Array.prototype.slice;
 const SCROLLTO_MARGIN = 32;
-const CARD_SELECTOR = '.todo-taskboard-card';
-
-function query(selector, container) {
-    if (typeof selector === 'string') {
-        container = container || document;
-        if (selector[0] === '#') {
-            let element = container.querySelector(selector);
-            if (element !== null) {
-                return [element];
-            }
-        } else {
-            return arraySlice.call(container
-                 .querySelectorAll(selector));
-        }
-    }
-    return [];
-}
 
 function create(tagName, attributes, children) {
     let element = document.createElement(tagName);
@@ -54,15 +34,6 @@ function create(tagName, attributes, children) {
 
     if (typeof children !== 'undefined') {
         appends(element, children);
-    }
-    return element;
-}
-
-function empty(element) {
-    if (isElement(element)) {
-        while (element.firstChild) {
-            element.removeChild(element.firstChild);
-        }
     }
     return element;
 }
@@ -100,9 +71,6 @@ function scrollTo(parent, element) {
         parent.scrollLeft += right + SCROLLTO_MARGIN;
     }
     if (top < 0 || bottom > 0) {
-        top = u(element)
-            .closest(CARD_SELECTOR)
-            .size().top - parentSize.top;
         parent.scrollTop += top;
     }
 }

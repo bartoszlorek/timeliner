@@ -1,14 +1,20 @@
-import { query, create } from './utils/dom.js';
+import { u } from 'umbrellajs';
+import { extend } from './utils/uplug.js';
+import { create } from './utils/dom.js';
 import render from './render.js';
 import parse from './parse.js';
+import {
+    PREFIX,
+    CONTENT_SELECTOR
+} from './constants.js';
 
-const PREFIX = 'timeliner-';
-const content = query('#tasks-content-pane')[0];
+extend(u);
+const content = u(CONTENT_SELECTOR);
 const track = create('div', {
     class: PREFIX + 'track'
 });
 
-content.parentElement.insertBefore(
+content.before(
     create('div', {
         id: 'timeliner',
         class: PREFIX + 'wrap'
@@ -23,12 +29,12 @@ content.parentElement.insertBefore(
         create('div', {
             class: PREFIX + 'board'
         },  track)
-    ]),
-content);
+    ])
+);
 
 function refresh() {
     render(
-        track,
+        u(track),
         parse(content)
     );
 }

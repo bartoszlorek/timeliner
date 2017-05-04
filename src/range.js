@@ -1,6 +1,5 @@
+import { DAY_MS } from './constants.js';
 import { isArray } from './utils/utils.js';
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 export {
     getRange,
@@ -44,7 +43,7 @@ function getRange(data) {
         i += 1;
     }
     return {
-        total: ((+maxDate - +minDate) / DAY_MS) + 1,
+        length: ((+maxDate - +minDate) / DAY_MS) + 1,
         min: minDate,
         max: maxDate
     }

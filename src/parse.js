@@ -1,71 +1,72 @@
-import { forEach, indexOf } from './utils/utils.js';
-import { query } from './utils/dom.js';
-
-const GROUP_SELECTOR = '.column';
-const TITLE_SELECTOR = '.title';
-const CARD_SELECTOR = '.todo-taskboard-card:not(.todo-taskboard-card-completed)';
-const CARD_TITLE_SELECTOR = '.todo-taskboard-card-title';
-const TODO_SELECTOR = '.todo-checklist-item:not(.todo-hidden)';
-const DATE_SELECTOR = '.todo-taskboard-card-dueDate';
-
-const DATE_REGEX = /^(\d{1,2})\.?(\d{2})?\.?(\d{4})?\s*\-?\s*(\d{1,2})?\.?(\d{2})?\.?(\d{4})?/;
-const YEAR = new Date().getFullYear();
+import { u } from 'umbrellajs';
+import {
+    GROUP_SELECTOR,
+    TITLE_SELECTOR,
+    CARD_SELECTOR,
+    CARD_TITLE_SELECTOR,
+    TODO_SELECTOR,
+    DATE_SELECTOR,
+    DATE_REGEX,
+    YEAR
+} from './constants.js';
 
 export default function(content) {
-    let groups = query(GROUP_SELECTOR, content),
-        result = [],
-        data;
-    forEach(groups, (i, group) => {
-        if (data = groupData(group)) {
-            result.push(data);
-        }
-    });
-    return result;
+    let data;
+    return content
+        .find(GROUP_SELECTOR).nodes
+        .reduce((arr, group) => {
+            group = u(group);
+            if (data = groupData(group)) {
+                arr.push(data);
+            }
+            return arr;
+        }, []);
 }
 
 function groupData(column) {
-    let cards = query(CARD_SELECTOR, column),
-        title = query(TITLE_SELECTOR, column)[0].textContent,
-        result = [],
-        terms,
-        date;
-    forEach(cards, (i, card) => {
-        terms = validTerms(query(TODO_SELECTOR, card));
-        if (terms.length) {
-            result = result.concat(terms);
+    let todos,
+        date,
+        result = column
+            .find(CARD_SELECTOR).nodes
+            .reduce((arr, card) => {
+                card = u(card);
+                todos = validTodos(card);
+                if (todos.length) {
+                    return arr.concat(todos);
+                }
+                if (date = cardDueDate(card)) {
+                    arr.push({
+                        entry: card,
+                        date
+                    });
+                }
+                return arr;
+            }, []);
+
+    if (result.length) {
+        return {
+            terms: result,
+            title: column
+                .find(TITLE_SELECTOR)
+                .text()
         }
-        else if (date = cardDueDate(card)) {
-            result.push({
-                entry: card,
-                date
-            });
-        }
-    });
-    if (!result.length) {
-        return false;
-    }
-    return {
-        terms: result,
-        title
     }
 }
 
-function validTerms(todos) {
-    let result = [],  
-        date;
-    forEach(todos, (i, todo) => {
-        date = parseDate(todo
-            .children[1]
-            .textContent);
-
-        if (date) {
-            result.push({
-                entry: todo,
-                date
-            });
-        }
-    });
-    return result;
+function validTodos(card) {
+    let date;
+    return card
+        .find(TODO_SELECTOR).nodes
+        .reduce((arr, todo) => {
+            todo = u(todo);
+            if (date = parseDate(todo.text())) {
+                arr.push({
+                    entry: todo,
+                    date
+                });
+            }
+            return arr;
+        }, []);
 }
 
 // possible date format:
@@ -78,8 +79,11 @@ function validTerms(todos) {
 // regex returns:
 // [full, dd, mm, yyyy, ddd, mm, yyyy]
 
-function parseDate(string) {
-    let match = DATE_REGEX.exec(string);
+function parseDate(text) {
+    let match = DATE_REGEX
+        .exec(text
+        .trim());
+
     if (match === null) {
         return false;
     }
@@ -100,6 +104,18 @@ function parseDate(string) {
     return false;
 }
 
+function cardDueDate(card) {
+    let date = card
+        .find(DATE_SELECTOR)
+        .attr('title');
+    if (date) {
+        return newDate(date
+            .split('-')
+            .reverse());
+    }
+    return false;
+}
+
 function newDate(array) {
     let day,
         month;
@@ -115,20 +131,6 @@ function newDate(array) {
         parseInt(array[2], 10),
         month - 1,
         day,
-        0, 0, 0, 0
-    );
-}
-
-function cardDueDate(card) {
-    let date = query(DATE_SELECTOR, card)[0].title;
-    if (!date) {
-        return false;
-    }
-    date = date.split('-');
-    return new Date(
-        date[0],
-        parseInt(date[1], 10) - 1,
-        date[2],
         0, 0, 0, 0
     );
 }
