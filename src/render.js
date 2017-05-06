@@ -1,4 +1,3 @@
-import { isArray, forEach } from './utils/utils.js';
 import { create } from './utils/dom.js';
 import { getRange, loopRange } from './range.js';
 import { getTasks } from './tasks.js';
@@ -13,12 +12,17 @@ import {
 } from './constants.js';
 
 export default function(container, data) {
-    if (!data.length) {
+    if (!data) {
         return false;
     }
     let range = getRange(data),
-        tasks = getTasks(range, data);
-
+        tasks;
+        
+    if (range.length <= 2) {
+        return;
+    }
+    tasks = getTasks(range, data);
+    
     container
         .empty()
         .appends(

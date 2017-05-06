@@ -1,6 +1,6 @@
 {
   "name": "timeliner",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -23,6 +23,7 @@
     "webpack": "^2.2.1"
   },
   "dependencies": {
+    "lodash": "^4.17.4",
     "umbrellajs": "^2.6.7"
   }
 }

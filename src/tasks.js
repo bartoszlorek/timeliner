@@ -1,8 +1,12 @@
-import { isArray, forEach } from './utils/utils.js';
+import { forEach, isArray } from 'lodash';
 import { create } from './utils/dom.js';
 import { getColor } from './colors.js';
 import { select, hover } from './select.js';
-import { PREFIX, DAY_MS, TASK_HEIGHT } from './constants.js';
+import {
+    PREFIX,
+    DAY_MS,
+    TASK_HEIGHT
+} from './constants.js';
 
 export function getTasks(range, data) {
     let dataLength = data.length,
@@ -12,11 +16,11 @@ export function getTasks(range, data) {
         tasks = [],
         maxTop = 0;
 
-    forEach(data, (i, group) => {
+    forEach(data, (group, i) => {
         let taskColor = getColor(i),
             entryColor = getColor(i, .5);
 
-        forEach(group.terms, (j, task) => {
+        forEach(group.terms, (task, j) => {
             let isOneDay = !isArray(task.date),
                 start = isOneDay ? +task.date : +task.date[0],
                 end = isOneDay ? start : +task.date[1],

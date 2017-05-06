@@ -1,10 +1,11 @@
 import { DAY_MS } from './constants.js';
-import { isArray } from './utils/utils.js';
+import { isArray } from 'lodash';
 
 export {
     getRange,
     loopRange
 }
+
 function getRange(data) {
     let length = data.length,
         minDate,

@@ -1,10 +1,11 @@
 import { u } from 'umbrellajs';
-import { scrollTo } from './utils/dom.js';
 import {
     CONTENT_SCROLL_SELECTOR,
     CARD_SELECTOR,
     SELECT_CLASS
 } from './constants.js';
+
+const SCROLLTO_MARGIN = 32;
 
 export {
     hover,
@@ -35,8 +36,11 @@ function hover(entry, color, force) {
             prop = 'backgroundColor';
             value = color;
         }
-        if (content === null || !content.length) {
+        if (content === null) {
             content = u(CONTENT_SCROLL_SELECTOR);
+            content = content.length
+                ? content.first()
+                : null;
         }
         scrollTo(content, entry
             .css(prop, value)
@@ -60,4 +64,26 @@ function select(element) {
         hover(false, false, true);
     }
     inSelect = element || null;
+}
+
+function scrollTo(parent, element) {
+    if (!parent) {
+        return;
+    }
+    let parentSize = u(parent).size(),
+        elementSize = u(element).size(),
+        left = elementSize.left - parentSize.left,
+        right = elementSize.right - parentSize.right,
+        top = elementSize.top - parentSize.top,
+        bottom = elementSize.bottom - parentSize.bottom;
+
+    if (left < 0) {
+        parent.scrollLeft += left - SCROLLTO_MARGIN;
+    }
+    else if (right > 0) {
+        parent.scrollLeft += right + SCROLLTO_MARGIN;
+    }
+    if (top < 0 || bottom > 0) {
+        parent.scrollTop += top;
+    }
 }
