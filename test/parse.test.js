@@ -3,10 +3,7 @@ import { create } from '../src/utils/dom.js';
 import { u } from 'umbrellajs';
 
 const date = new Date(2017, 4, 4, 0, 0, 0, 0);
-const period = [
-    new Date(2017, 4, 4, 0, 0, 0, 0),
-    new Date(2017, 4, 6, 0, 0, 0, 0)
-];
+const date2 = new Date(2017, 4, 6, 0, 0, 0, 0);
 
 const falsy = [
     null,
@@ -59,7 +56,7 @@ describe('newDate', function() {
             [4, 5, 2017]
         ]
         .forEach(value =>
-            expect(newDate(value)).toEqual(date))
+            expect(+newDate(value)).toBe(+date))
     })
 
 })
@@ -85,7 +82,7 @@ describe('parseDate', function() {
             '04.05.2017 text'
         ]
         .forEach(value =>
-            expect(parseDate(value)).toEqual(date))
+            expect(+parseDate(value)).toBe(+date))
     })
     it('returns period (array)', function() {
         [
@@ -95,7 +92,7 @@ describe('parseDate', function() {
             '04.05.2017-06.05.2017 text'
         ]
         .forEach(value =>
-            expect(parseDate(value)).toEqual(period))
+            expect(+parseDate(value)[1]).toBe(+date2))
     })
 })
 
@@ -106,7 +103,7 @@ describe('cardDueDate', function() {
             expect(cardDueDate(value)).toBe(false))
     })
     it('returns date', function() {
-        expect(cardDueDate(card)).toEqual(date);
+        expect(+cardDueDate(card)).toBe(+date);
     })
 
 })
@@ -117,13 +114,13 @@ describe('validTodos', function() {
         falsy.forEach(value =>
             expect(validTodos(value)).toBe(false))
     })
-    it('returns todos (array)', function() {
-        let todo = validTodos(card)[0];
-        
-        expect(todo).toHaveProperty('entry');
-        expect(todo).toHaveProperty('date');
-        expect(todo.entry).toBeInstanceOf(u);
-        expect(todo.date).toEqual(date);
+    it('returns array containing todos', function() {
+        expect(validTodos(card)).toEqual([
+            {
+                entry: todo,
+                date
+            }
+        ]);
     })
 
 })
@@ -135,17 +132,10 @@ describe('groupData', function() {
             expect(groupData(value)).toBe(false))
     })
     it('returns data (object)', function() {
-        let data = groupData(column);
-        
-        expect(data).toHaveProperty('title');
-        expect(data).toHaveProperty('terms');
-        expect(data.title).toBe('Title');
-        expect(data.terms[0]).toEqual(
-            expect.objectContaining({
-                entry: todo,
-                date
-            })
-        );
+        expect(groupData(column)).toEqual({
+            title: 'Title',
+            terms: expect.any(Array)
+        });
     })
 
 })
