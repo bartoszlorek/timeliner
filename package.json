@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ubery/timeliner.git"
+    "url": "git+https://github.com/bartoszlorek/timeliner.git"
   },
   "author": "Bartosz Lorek",
   "license": "MIT",
